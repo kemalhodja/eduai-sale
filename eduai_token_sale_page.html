@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDUAI Token Satışı</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; text-align: center; }
+    .container { background: white; padding: 30px; border-radius: 10px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .connect { background-color: #2980b9; color: white; }
+    .buy { background-color: #27ae60; color: white; }
+    input { padding: 10px; width: 80%; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>EDUAI Token Satışı</h1>
+    <p>1 BNB = 5.000 EDUAI</p>
+    <p>Minimum alım: 0.01 BNB</p>
+    <button class="connect" onclick="connectWallet()">Cüzdanı Bağla</button>
+    <br />
+    <input type="number" id="bnbAmount" placeholder="Almak istediğiniz BNB miktarı" min="0.01" step="0.01" />
+    <br />
+    <button class="buy" onclick="buyTokens()">EDUAI Satın Al</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    let web3;
+    const saleContractAddress = "0xED1f2124395b411aCED0790dd3425B6d1aB52098";
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          web3 = new Web3(window.ethereum);
+          document.getElementById("status").innerText = "Cüzdan bağlandı ✅";
+        } catch (error) {
+          console.error(error);
+          document.getElementById("status").innerText = "Cüzdan bağlantısı reddedildi.";
+        }
+      } else {
+        alert("Metamask yüklü değil!");
+      }
+    }
+
+    async function buyTokens() {
+      const bnb = document.getElementById("bnbAmount").value;
+      if (!web3) {
+        alert("Lütfen önce cüzdanınızı bağlayın.");
+        return;
+      }
+      if (bnb < 0.01) {
+        alert("Minimum alım miktarı 0.01 BNB'dir.");
+        return;
+      }
+
+      const accounts = await web3.eth.getAccounts();
+      const from = accounts[0];
+
+      try {
+        await web3.eth.sendTransaction({
+          from: from,
+          to: saleContractAddress,
+          value: web3.utils.toWei(bnb, "ether")
+        });
+        document.getElementById("status").innerText = `Başarılı! ${bnb} BNB karşılığı EDUAI gönderildi.`;
+      } catch (error) {
+        console.error(error);
+        document.getElementById("status").innerText = "İşlem başarısız.";
+      }
+    }
+  </script>
+</body>
+</html>
