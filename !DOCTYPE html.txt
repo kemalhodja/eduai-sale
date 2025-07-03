@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EDUAI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { color: #2c3e50; }
+    section { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #ccc; margin-bottom: 30px; }
+    footer { text-align: center; margin-top: 40px; font-size: 0.9em; color: #777; }
+    ul { line-height: 1.6; }
+    a.button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #2c3e50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    a.button:hover {
+      background-color: #1b2838;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EDUAI | Blockchain ile Eğitimde Yeni Dönem</h1>
+    <p>Adil, şeffaf ve ödüllendirici eğitim ekosistemi</p>
+  </header>
+
+  <section>
+    <h2>Proje Amacı ve Vizyonu</h2>
+    <p>EDUAI, öğrenen, öğreten ve üreten herkes için adil, şeffaf ve erişilebilir bir eğitim ekosistemi yaratmayı hedefleyen bir blockchain projesidir. Eğitim alanındaki mevcut sorunlara yenilikçi çözümler sunarak, katılımcıların katkılarının ödüllendirildiği, güvenilir ve açık bir platform oluşturuyoruz.</p>
+  </section>
+
+  <section>
+    <h2>Teknoloji ve Altyapı</h2>
+    <p>EDUAI tokenı, Binance Smart Chain (BSC) üzerinde BEP-20 standardı kullanılarak geliştirilmiştir. Düşük işlem ücretleri ve yüksek hız avantajı sunar. Akıllı sözleşmeler, token transferleri, ödül dağıtımları ve ekosistem içi işlemleri güvenli ve otomatik hale getirir.</p>
+  </section>
+
+  <section>
+    <h2>Tokenomics</h2>
+    <ul>
+      <li>Toplam Arz: 1.000.000 EDUAI</li>
+      <li>Ekip ve Geliştiriciler: %15 (150.000 EDUAI)</li>
+      <li>Topluluk & Ödüller: %45 (450.000 EDUAI)</li>
+      <li>Rezerv: %20 (200.000 EDUAI)</li>
+      <li>Satış & Pazarlama: %20 (200.000 EDUAI)</li>
+      <li>Yakım mekanizması ve ödüllendirme sistemi bulunmaktadır.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Yol Haritası (Roadmap)</h2>
+    <ul>
+      <li>2025 Q3: Proje Başlangıcı ve Token Oluşturma</li>
+      <li>2025 Q4: Akıllı Sözleşme Denetimi ve Testnet Yayını</li>
+      <li>2026 Q1: Ana Ağda (Mainnet) Token Lansmanı ve Listelenme</li>
+      <li>2026 Q2: Topluluk Genişletme ve Ödül Programlarının Başlatılması</li>
+      <li>2026 Q3: Eğitim İçerik Platformunun Entegrasyonu</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>İletişim</h2>
+    <p>Daha fazla bilgi için:</p>
+    <ul>
+      <li>Web: <a href="https://eduai.io" target="_blank">https://eduai.io</a></li>
+      <li>Twitter: <a href="https://twitter.com/EDUAITOKEN" target="_blank">@EDUAITOKEN</a></li>
+      <li>Telegram: <a href="https://t.me/EDUAITOKEN" target="_blank">@EDUAITOKEN</a></li>
+    </ul>
+  </section>
+
+  <section style="text-align:center;">
+    <a href="EDUAI_Whitepaper.pdf" class="button" download>Whitepaper İndir</a>
+  </section>
+
+  <footer>
+    EDUAI © 2025 | Tüm hakları saklıdır.
+  </footer>
+</body>
+</html>
