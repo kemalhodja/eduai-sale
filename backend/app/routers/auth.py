@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,11 +35,13 @@ auth_service = AuthService()
 
 
 def _allow_internal_admin(request: Request) -> None:
+    # Timing-safe karsilastirma + IP rate limit (brute-force korumasi)
+    check_rate_limit(request, "internal", settings.auth_rate_limit, strict=True)
     if settings.debug:
         return
     secret = settings.internal_upgrade_secret.strip()
     header = request.headers.get("x-internal-upgrade-secret", "")
-    if secret and header == secret:
+    if secret and secrets.compare_digest(header, secret):
         return
     raise HTTPException(status_code=404, detail="Not found")
 

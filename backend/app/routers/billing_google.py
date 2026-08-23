@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.billing import Subscription, SubscriptionStatus
 from app.services.billing.service import BillingService
+from app.utils.rate_limit import check_rate_limit
 from app.services.billing_scheduler import notify_subscription_grace_period
 
 router = APIRouter(prefix="/billing/google", tags=["Billing Google"])
@@ -40,13 +42,15 @@ class GoogleRtdnPayload(BaseModel):
 
 
 def _verify_rtdn_secret(request: Request) -> None:
+    # Timing-safe karsilastirma + IP rate limit (brute-force korumasi)
+    check_rate_limit(request, "internal", settings.auth_rate_limit, strict=True)
     secret = settings.google_rtdn_webhook_secret.strip()
     if not secret:
         if settings.debug:
             return
         raise HTTPException(status_code=404, detail="Not found")
     header = request.headers.get("x-rtdn-secret", "")
-    if header != secret:
+    if not secrets.compare_digest(header, secret):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 

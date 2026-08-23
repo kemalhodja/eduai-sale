@@ -1,4 +1,5 @@
 import asyncio
+import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
@@ -10,6 +11,7 @@ from app.dependencies import get_current_user, require_premium, user_locale
 from app.i18n import resolve_error
 from app.models.billing import PlanTier
 from app.models.user import User
+from app.utils.rate_limit import check_rate_limit
 from app.schemas.billing import (
     AdminUpgradeRequest,
     AppleVerifyRequest,
@@ -29,6 +31,8 @@ billing_service = BillingService()
 
 
 def _allow_internal_upgrade(request: Request) -> None:
+    # Timing-safe karsilastirma + IP rate limit: secret brute-force'u engellenir.
+    check_rate_limit(request, "internal", settings.auth_rate_limit, strict=True)
     if settings.debug:
         return
     # Production Play billing: internal upgrade must not be reachable from the app.
@@ -36,7 +40,7 @@ def _allow_internal_upgrade(request: Request) -> None:
         raise HTTPException(status_code=404, detail="Not found")
     secret = settings.internal_upgrade_secret.strip()
     header = request.headers.get("x-internal-upgrade-secret", "")
-    if secret and header == secret:
+    if secret and secrets.compare_digest(header, secret):
         return
     raise HTTPException(status_code=404, detail="Not found")
 

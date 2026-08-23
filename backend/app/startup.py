@@ -28,6 +28,10 @@ def validate_production_settings() -> None:
         errors.append("BILLING_PREMIUM_UNLOCKED must be false in production")
     if settings.google_play_verify_mock:
         errors.append("GOOGLE_PLAY_VERIFY_MOCK must be false in production")
+    if settings.apple_verify_mock:
+        # Mock modda her 8+ karakterlik string gecerli fis sayilir -> premium ucretli
+        # ozellik sahte fisle acilabilir. Production'da kapatilmalidir.
+        errors.append("APPLE_VERIFY_MOCK must be false in production")
     if settings.s3_enabled and not _s3_configured():
         errors.append("S3_ENABLED=true but S3_ENDPOINT/S3_ACCESS_KEY/S3_SECRET_KEY are not all set")
     if settings.internal_upgrade_secret in _KNOWN_WEAK_INTERNAL:

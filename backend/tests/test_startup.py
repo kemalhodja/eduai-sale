@@ -13,6 +13,9 @@ def _prod_settings(**overrides) -> Settings:
         "allowed_origins": "https://example.com",
         "billing_premium_unlocked": False,
         "google_play_verify_mock": False,
+        # conftest tum test surecinde APPLE_VERIFY_MOCK=true set eder;
+        # gecerli bir production konfigurasyonunda bu kapali olmalidir.
+        "apple_verify_mock": False,
         "s3_enabled": True,
         "s3_endpoint": "https://r2.example.com",
         "s3_access_key": "key",
@@ -40,6 +43,13 @@ def test_production_rejects_billing_mock(monkeypatch):
     s = _prod_settings(google_play_verify_mock=True)
     monkeypatch.setattr("app.startup.settings", s)
     with pytest.raises(RuntimeError, match="GOOGLE_PLAY_VERIFY_MOCK"):
+        validate_production_settings()
+
+
+def test_production_rejects_apple_mock(monkeypatch):
+    s = _prod_settings(apple_verify_mock=True)
+    monkeypatch.setattr("app.startup.settings", s)
+    with pytest.raises(RuntimeError, match="APPLE_VERIFY_MOCK"):
         validate_production_settings()
 
 

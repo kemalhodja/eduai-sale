@@ -73,9 +73,9 @@ class ShoppingService:
         from app.services.product_price.service import ProductPriceService
 
         item = await db.get(ShoppingItem, item_id)
-        if not item:
+        # IDOR korumasi: baskasinin listesindeki urun complete edilemez
+        if not item or item.user_id != user_id:
             raise I18nError("shopping.item_not_found")
-
         item.is_completed = True
         item.completed_at = datetime.utcnow()
         item.price = price

@@ -58,6 +58,10 @@ def _ensure_can_spend(wallet: Wallet, amount: Decimal) -> None:
 def _ensure_positive_amount(amount: Decimal) -> None:
     if amount <= 0:
         raise I18nError("wallet.invalid_amount")
+    # Para ust siniri: 1e500 gibi degerler JSON'da inf olarak sizar
+    from app.utils.validation import MAX_MONEY
+    if amount > MAX_MONEY:
+        raise I18nError("wallet.invalid_amount")
 
 
 def _apply_inflow(wallet: Wallet, amount: Decimal) -> None:
