@@ -17,3 +17,6 @@ class RefreshToken(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Reuse-detection zinciri: ayni family'den revokenmis token tekrar sunulursa
+    # tum aile iptal edilir (stolen refresh token zincirini kirar).
+    family_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)

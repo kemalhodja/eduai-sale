@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -42,13 +43,16 @@ class AuthService:
         self.storage_service = StorageService()
         self.email_service = EmailService()
 
-    async def _issue_tokens(self, db: AsyncSession, user: User) -> tuple[str, str]:
+    async def _issue_tokens(
+        self, db: AsyncSession, user: User, family_id: UUID | None = None
+    ) -> tuple[str, str]:
         access = create_access_token(user.id)
         raw_refresh = create_refresh_token_value()
         db.add(RefreshToken(
             user_id=user.id,
             token_hash=hash_refresh_token(raw_refresh),
             expires_at=datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days),
+            family_id=family_id or uuid.uuid4(),
         ))
         await db.commit()
         return access, raw_refresh
@@ -83,23 +87,50 @@ class AuthService:
 
     async def refresh(self, db: AsyncSession, refresh_token: str) -> tuple[User, str, str]:
         token_hash = hash_refresh_token(refresh_token)
+        # FOR UPDATE: paralel cift refresh'te yalnizca biri kazanir (row lock)
         result = await db.execute(
-            select(RefreshToken).where(
-                RefreshToken.token_hash == token_hash,
-                RefreshToken.revoked_at.is_(None),
-                RefreshToken.expires_at > datetime.utcnow(),
-            )
+            select(RefreshToken).where(RefreshToken.token_hash == token_hash).with_for_update()
         )
         record = result.scalars().first()
-        if not record:
+
+        now = datetime.utcnow()
+
+        # REUSE DETECTION: revokenmis/expired token tekrar sunulduysa bu bir hirsizlik
+        # isaretidir -> ayni ailedeki tum tokenlari iptal et.
+        if record and record.revoked_at is not None:
+            if record.family_id is not None:
+                await db.execute(
+                    update(RefreshToken)
+                    .where(
+                        RefreshToken.user_id == record.user_id,
+                        RefreshToken.family_id == record.family_id,
+                        RefreshToken.revoked_at.is_(None),
+                    )
+                    .values(revoked_at=now)
+                )
+            else:
+                # Legacy kayit (family yok): muhafazakar davran, kullanicinin
+                # tum aktif refresh tokenlarini iptal et.
+                await db.execute(
+                    update(RefreshToken)
+                    .where(
+                        RefreshToken.user_id == record.user_id,
+                        RefreshToken.revoked_at.is_(None),
+                    )
+                    .values(revoked_at=now)
+                )
+            await db.commit()
+            raise I18nError("auth.invalid_refresh")
+
+        if not record or record.expires_at <= now:
             raise I18nError("auth.invalid_refresh")
 
         user = await db.get(User, record.user_id)
         if not user:
             raise I18nError("auth.user_not_found")
 
-        record.revoked_at = datetime.utcnow()
-        access, new_refresh = await self._issue_tokens(db, user)
+        record.revoked_at = now
+        access, new_refresh = await self._issue_tokens(db, user, family_id=record.family_id)
         return user, access, new_refresh
 
     async def revoke_refresh_token(self, db: AsyncSession, refresh_token: str) -> None:
