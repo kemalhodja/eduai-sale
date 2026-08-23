@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     app_name: str = "TalkCash API"
-    debug: bool = True
+    # GUVENLIK: default False. Yerel gelistirmede .env icine DEBUG=true yazin.
+    debug: bool = False
 
     database_url: str = "postgresql+asyncpg://talkcash:talkcash@localhost:5432/talkcash"
     redis_url: str = "redis://localhost:6379/0"

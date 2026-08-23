@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -31,6 +32,8 @@ from app.utils.security import (
     hash_refresh_token,
     verify_password,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -221,8 +224,16 @@ class AuthService:
         await store_reset_token(user.id, token)
         reset_url = f"{settings.password_reset_url}?token={token}"
         email_sent = self.email_service.send_password_reset(user.email, reset_url, user.locale or "tr")
-        # Dev always gets token; prod falls back to in-app reset when SMTP is unavailable.
-        expose_token = settings.debug or not email_sent
+        # GUVENLIK: reset token YALNIZCA debug modunda API yanitinda doner.
+        # Production'da SMTP arizasi olsa bile token asla expose edilmez
+        # (yoksa SMTP kesintisi = hesap ele gecirme vektoru olur).
+        if not settings.debug and not email_sent:
+            logger.warning(
+                "SMTP unavailable in production: password reset email for user %s was NOT sent. "
+                "Configure SMTP_HOST/SMTP_USER/SMTP_PASSWORD.",
+                email,
+            )
+        expose_token = bool(settings.debug)
         return (token if expose_token else None, email_sent)
 
     async def reset_password(self, db: AsyncSession, token: str, new_password: str) -> None:
