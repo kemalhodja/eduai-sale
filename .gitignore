@@ -21,3 +21,7 @@ htmlcov/
 .cloudflare-tunnel.pid
 .tunnel-url
 DEPLOY_STATUS.json
+
+# Local databases ve yedekler
+*.db
+*.db.backup*
