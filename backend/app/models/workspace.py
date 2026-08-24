@@ -58,4 +58,6 @@ class Invitation(Base):
     role: Mapped[WorkspaceRole] = mapped_column(pg_enum(WorkspaceRole), default=WorkspaceRole.MEMBER)
     token: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(30), default="pending")
+    # Davet omru: suresi dolan token kabul edilmez (7 gun; legacy satirlar NULL)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -16,7 +16,9 @@ def _normalize_database_url(url: str) -> str:
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    # extra=ignore: bilinmeyen env degiskenleri (Render/compose enjeksiyonlari)
+    # uygulamayi cokertmesin.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_name: str = "TalkCash API"
     # GUVENLIK: default False. Yerel gelistirmede .env icine DEBUG=true yazin.

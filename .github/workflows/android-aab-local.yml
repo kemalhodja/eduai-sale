@@ -30,12 +30,18 @@ jobs:
         run: sdkmanager "ndk;26.1.10909125"
 
       - name: Validate signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           missing=0
-          [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ] && echo "::error::Missing ANDROID_KEYSTORE_BASE64" && missing=1
-          [ -z "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ] && echo "::error::Missing ANDROID_KEYSTORE_PASSWORD" && missing=1
-          [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ] && echo "::error::Missing ANDROID_KEY_ALIAS" && missing=1
-          [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ] && echo "::error::Missing ANDROID_KEY_PASSWORD" && missing=1
+          # Guvenlik: secret'lar shell'e interpolasyon yerine env uzerinden gecer
+          [ -z "$ANDROID_KEYSTORE_BASE64" ] && echo "::error::Missing ANDROID_KEYSTORE_BASE64" && missing=1
+          [ -z "$ANDROID_KEYSTORE_PASSWORD" ] && echo "::error::Missing ANDROID_KEYSTORE_PASSWORD" && missing=1
+          [ -z "$ANDROID_KEY_ALIAS" ] && echo "::error::Missing ANDROID_KEY_ALIAS" && missing=1
+          [ -z "$ANDROID_KEY_PASSWORD" ] && echo "::error::Missing ANDROID_KEY_PASSWORD" && missing=1
           if [ "$missing" -ne 0 ]; then
             echo "See docs/ANDROID_AAB_GRADLE.md"
           fi
@@ -44,13 +50,16 @@ jobs:
       - name: Install release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           mkdir -p mobile/android/app
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > mobile/android/app/release.keystore
           printf 'storeFile=release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
-            "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            "${{ secrets.ANDROID_KEY_ALIAS }}" \
-            "${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            "$ANDROID_KEYSTORE_PASSWORD" \
+            "$ANDROID_KEY_ALIAS" \
+            "$ANDROID_KEY_PASSWORD" \
             > mobile/android/keystore.properties
 
       - name: Build production AAB

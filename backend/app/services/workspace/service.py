@@ -1,4 +1,5 @@
 import secrets
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -88,6 +89,7 @@ class WorkspaceService:
             email=str(data.email).strip().lower(),
             role=data.role,
             token=token,
+            expires_at=datetime.utcnow() + timedelta(days=7),
         )
         db.add(invitation)
         await self.audit.log(
@@ -142,6 +144,13 @@ class WorkspaceService:
         if not row:
             raise ValueError("invitation.not_found")
         invitation, org = row
+
+        # Suresi dolmus davet kabul edilmez ve kapatilir.
+        if invitation.expires_at is not None and invitation.expires_at < datetime.utcnow():
+            invitation.status = "expired"
+            await db.commit()
+            raise ValueError("invitation.not_found")
+
         if invitation.email != normalized:
             raise ValueError("invitation.email_mismatch")
 

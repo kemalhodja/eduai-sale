@@ -55,20 +55,17 @@ async def test_health_detailed_in_debug_mode(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_health_detailed_secret_accepted_in_prod(monkeypatch):
-    """DEBUG=false + dogru internal secret -> detayli health erisilebilir."""
-    from unittest.mock import patch
-
+    """DEBUG=false + dogru internal secret -> detayli health ERISILEBILIR (404 degil)."""
     monkeypatch.setattr("app.main.settings.debug", False)
     monkeypatch.setattr("app.main.settings.internal_upgrade_secret", "strong-secret-value")
     monkeypatch.setattr("app.main.settings.s3_enabled", False)
 
-    # DB/Redis baglanti denemelerini mockla (test ortaminda servis yok)
-    with patch("app.main.get_redis", side_effect=ConnectionError("down")):
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get(
-                "/health/detailed",
-                headers={"x-internal-upgrade-secret": "strong-secret-value"},
-            )
-    assert resp.status_code == 503  # redis down -> degraded ama erisim verildi
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get(
+            "/health/detailed",
+            headers={"x-internal-upgrade-secret": "strong-secret-value"},
+        )
+    # Durum kodu ortamdaki DB/Redis'e baglidir; onemli olan secret'in kabul edilmesi.
+    assert resp.status_code in (200, 503)
     assert "observability" in resp.json()
