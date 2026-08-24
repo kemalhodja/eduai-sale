@@ -1,0 +1,6 @@
+# TalkCash web (Expo export) -> Cloudflare Pages
+# Bu dosya Cloudflare Pages/Workers Builds deploy komutunun dogru klasoru
+# bulmasini saglar (dashboard ayarlarindan bagimsiz).
+name = "talkcash"
+pages_build_output_dir = "mobile/dist"
+compatibility_date = "2024-09-23"
