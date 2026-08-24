@@ -25,3 +25,9 @@ DEPLOY_STATUS.json
 # Local databases ve yedekler
 *.db
 *.db.backup*
+
+# Cloudflare API token (yerel)
+.cf-api-token
+.tunnel-url
+.cloudflare-tunnel.log
+.cloudflare-tunnel.pid
