@@ -136,7 +136,10 @@ class ForgotPasswordResponse(BaseModel):
     status: str = "ok"
     message: str
     reset_token: str | None = None
-    email_sent: bool = False
+    # GUVENLIK/PRIVACY: production'da router bu alani None dondurur.
+    # Gercek deger (True=adres mevcut + mail gitti) hesap varligini ele verir
+    # (enumeration oracle). Yalnizca debug modunda doldurulur.
+    email_sent: bool | None = None
 
 
 class AdminClearPinRequest(BaseModel):

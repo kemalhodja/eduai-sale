@@ -141,6 +141,7 @@ async def chat_history(
     db: AsyncSession = Depends(get_db),
     limit: int = 30,
 ):
+    limit = max(1, min(limit, 100))  # sinirsiz .limit() -> kullanici bazli DoS onlemi
     items = await chat_service.list_history(db, user.id, limit=limit)
     return [
         ChatMessageResponse(

@@ -254,7 +254,7 @@ class AuthService:
         token = create_reset_token()
         await store_reset_token(user.id, token)
         reset_url = f"{settings.password_reset_url}?token={token}"
-        email_sent = self.email_service.send_password_reset(user.email, reset_url, user.locale or "tr")
+        email_sent = await self.email_service.send_password_reset(user.email, reset_url, user.locale or "tr")
         # GUVENLIK: reset token YALNIZCA debug modunda API yanitinda doner.
         # Production'da SMTP arizasi olsa bile token asla expose edilmez
         # (yoksa SMTP kesintisi = hesap ele gecirme vektoru olur).

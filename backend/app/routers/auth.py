@@ -94,7 +94,8 @@ async def forgot_password(
     return ForgotPasswordResponse(
         message=t("auth.password_reset_sent", lang),
         reset_token=reset_token,
-        email_sent=email_sent,
+        # Enumeration korumasi: gercek teslimat durumu yalnizca debug'da acilir.
+        email_sent=email_sent if settings.debug else None,
     )
 
 

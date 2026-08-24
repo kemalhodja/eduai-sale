@@ -186,6 +186,8 @@ class AgendaService:
         days: int = 30,
         item_type: AgendaItemType | None = None,
     ) -> list[AgendaItem]:
+        # days parametresini sinirla (days=999999 -> tum tablo taramasi)
+        days = max(1, min(days, 365))
         cutoff = datetime.utcnow() + timedelta(days=days)
         filters = [
             AgendaItem.user_id == user_id,
@@ -198,7 +200,7 @@ class AgendaService:
         if item_type is not None:
             filters.append(AgendaItem.item_type == item_type.value)
         result = await db.execute(
-            select(AgendaItem).where(*filters).order_by(AgendaItem.due_date)
+            select(AgendaItem).where(*filters).order_by(AgendaItem.due_date).limit(200)
         )
         return list(result.scalars().all())
 

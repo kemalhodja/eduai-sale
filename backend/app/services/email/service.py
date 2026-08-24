@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import smtplib
 from email.message import EmailMessage
@@ -12,16 +13,9 @@ class EmailService:
     def _smtp_configured(self) -> bool:
         return bool(settings.smtp_host.strip())
 
-    def send_password_reset(self, to_email: str, reset_url: str, locale: str = "tr") -> bool:
+    def _send_password_reset_sync(self, to_email: str, reset_url: str, locale: str) -> bool:
         subject = t("auth.password_reset_subject", locale)
         body = t("auth.password_reset_body", locale).replace("{url}", reset_url)
-
-        if not self._smtp_configured():
-            if settings.debug:
-                logger.info("Password reset link for %s: %s", to_email, reset_url)
-                return True
-            logger.warning("SMTP not configured; password reset email not sent for %s", to_email)
-            return False
 
         message = EmailMessage()
         message["Subject"] = subject
@@ -40,3 +34,16 @@ class EmailService:
         except Exception:
             logger.exception("Failed to send password reset email to %s", to_email)
             return False
+
+    async def send_password_reset(self, to_email: str, reset_url: str, locale: str = "tr") -> bool:
+        if not self._smtp_configured():
+            if settings.debug:
+                logger.info("Password reset link for %s: %s", to_email, reset_url)
+                return True
+            logger.warning("SMTP not configured; password reset email not sent for %s", to_email)
+            return False
+
+        # smtplib bloklayan IO: event loop'u 20 sn'e kadar kilitler -> worker thread
+        return await asyncio.to_thread(
+            self._send_password_reset_sync, to_email, reset_url, locale
+        )

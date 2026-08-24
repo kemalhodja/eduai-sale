@@ -114,9 +114,13 @@ class NotificationService:
             sent += 1
         return sent
 
-    async def list_notifications(self, db: AsyncSession, user_id: UUID) -> list[Notification]:
+    async def list_notifications(self, db: AsyncSession, user_id: UUID, limit: int = 100) -> list[Notification]:
+        limit = max(1, min(limit, 200))
         result = await db.execute(
-            select(Notification).where(Notification.user_id == user_id).order_by(Notification.created_at.desc())
+            select(Notification)
+            .where(Notification.user_id == user_id)
+            .order_by(Notification.created_at.desc())
+            .limit(limit)
         )
         return list(result.scalars().all())
 

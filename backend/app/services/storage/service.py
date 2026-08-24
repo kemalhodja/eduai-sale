@@ -76,8 +76,9 @@ class StorageService:
 
         if self._s3:
             await asyncio.to_thread(self._put_s3, key, data, extension)
-            if settings.s3_public_url:
-                return f"{settings.s3_public_url.rstrip('/')}/{key}"
+            # GUVENLIK: nesneler private tutulur; stored_path olarak daima s3://
+            # formati kullanilir. Erisim yalnizca kisa TTL'li presigned URL ile.
+            # (Eski davranis S3_PUBLIC_URL altinda herkese acik link donduruyordu.)
             return f"s3://{settings.s3_bucket}/{key}"
 
         user_dir = UPLOAD_DIR / user_id
@@ -87,6 +88,17 @@ class StorageService:
         return str(filepath)
 
     async def get_url(self, stored_path: str) -> str:
+        # Public URL'e kaydedilmis ESKI kayitlar icin: bucket/key cözüp
+        # presigned URL uret (gerkese acik linke yonlendirme yapma).
+        legacy_location = self._s3_location_from_path(stored_path) if stored_path.startswith("http") else None
+        if legacy_location and self._s3:
+            bucket, key = legacy_location
+            return await asyncio.to_thread(
+                self._s3.generate_presigned_url,
+                "get_object",
+                Params={"Bucket": bucket, "Key": key},
+                ExpiresIn=3600,
+            )
         if stored_path.startswith("http"):
             return stored_path
         if stored_path.startswith("s3://") and self._s3:

@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 from datetime import datetime
 from uuid import UUID
@@ -91,8 +92,11 @@ async def google_rtdn_webhook(
         if settings.google_play_verify_mock:
             subscription.expire_date = datetime.utcnow().replace(day=28)
         else:
-            verified = billing_service.google_play.verify_subscription(
-                data.product_id, data.purchase_token
+            # googleapiclient senkron: event loop'u bloklamamak icin worker thread
+            verified = await asyncio.to_thread(
+                billing_service.google_play.verify_subscription,
+                data.product_id,
+                data.purchase_token,
             )
             subscription.expire_date = verified.expires_at
             subscription.google_product_id = verified.product_id
