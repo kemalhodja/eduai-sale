@@ -1,4 +1,5 @@
 import logging
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -206,6 +207,65 @@ async def health(request: Request, db: AsyncSession = Depends(get_db)):
             "status": "ok" if all_ok else ("degraded" if healthy else "down"),
             "app": settings.app_name,
             "message": t("health.ok", lang),
+            "checks": checks,
+            # Kamuya acik pazarlama feature flag'leri. Hassas operasyonel detaylar
+            # (LLM/STT saglayicisi, billing posture, launch_readiness) yalnizca
+            # /health/detailed icinde, internal secret arkasinda sunulur.
+            "features": {
+                "micro_savings": True,
+                "live_rates": True,
+                "portfolio_coach": True,
+                "offline_sync": True,
+                "voice_commands": stt_available(),
+            },
+        },
+    )
+
+
+@app.get("/health/detailed")
+async def health_detailed(request: Request, db: AsyncSession = Depends(get_db)):
+    """Operasyonel tanilama: internal secret veya debug modu gerektirir."""
+    if not settings.debug:
+        secret = settings.internal_upgrade_secret.strip()
+        header = request.headers.get("x-internal-upgrade-secret", "")
+        if not secret or not secrets.compare_digest(header, secret):
+            raise HTTPException(status_code=404, detail="Not found")
+
+    checks: dict[str, bool] = {"database": False, "redis": False}
+    if settings.s3_enabled:
+        checks["storage"] = False
+
+    try:
+        await db.execute(text("SELECT 1"))
+        checks["database"] = True
+    except Exception:
+        pass
+
+    try:
+        redis = await get_redis()
+        await redis.ping()
+        checks["redis"] = True
+    except Exception:
+        pass
+
+    if settings.s3_enabled:
+        try:
+            from app.services.storage.service import StorageService
+            storage = StorageService()
+            if storage._s3:
+                import asyncio
+                await asyncio.to_thread(storage._s3.head_bucket, Bucket=settings.s3_bucket)
+                checks["storage"] = True
+        except Exception:
+            pass
+
+    healthy = checks["database"]
+    all_ok = all(checks.values())
+    return JSONResponse(
+        status_code=200 if healthy else 503,
+        content={
+            "status": "ok" if all_ok else ("degraded" if healthy else "down"),
+            "app": settings.app_name,
             "locales": SUPPORTED_LOCALES,
             "checks": checks,
             "features": {
@@ -214,7 +274,7 @@ async def health(request: Request, db: AsyncSession = Depends(get_db)):
                 "portfolio_coach": True,
                 "offline_sync": True,
                 "voice_commands": stt_available(),
-                "llm": bool(settings.openai_api_key),
+                "llm": bool(settings.openai_api_key or settings.groq_api_key),
                 "premium_unlocked": settings.billing_premium_unlocked,
                 "stt_provider": (
                     "groq" if settings.groq_api_key

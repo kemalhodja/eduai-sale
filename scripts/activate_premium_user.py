@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Grant premium to a user by email (requires INTERNAL_UPGRADE_SECRET on API)."""
+"""Grant premium to a user by email (requires INTERNAL_UPGRADE_SECRET on API).
+
+Gereken ortam degiskenleri:
+    API_URL                  (orn: https://talkcash-api-prod.onrender.com)
+    USER_EMAIL               hedef kullanici
+    PREMIUM_PLAN             (varsayilan: pro)
+    INTERNAL_UPGRADE_SECRET  sunucudaki gizli anahtar (default YOK)
+"""
 
 from __future__ import annotations
 
@@ -9,10 +16,10 @@ import sys
 import urllib.error
 import urllib.request
 
-BASE = os.environ.get("API_URL", "https://talkcash-api-prod.onrender.com").rstrip("/") + "/api/v1"
-EMAIL = os.environ.get("USER_EMAIL", "ozyurtkemal35@gmail.com")
+BASE = os.environ.get("API_URL", "")
+EMAIL = os.environ.get("USER_EMAIL", "")
 PLAN = os.environ.get("PREMIUM_PLAN", "pro")
-SECRET = os.environ.get("INTERNAL_UPGRADE_SECRET", "talkcash-internal-test-2026")
+SECRET = os.environ.get("INTERNAL_UPGRADE_SECRET", "")
 
 
 def req(method: str, path: str, data: dict | None = None) -> tuple[int, dict]:
@@ -36,6 +43,15 @@ def req(method: str, path: str, data: dict | None = None) -> tuple[int, dict]:
 
 
 def main() -> int:
+    global BASE
+    missing = [name for name, value in (
+        ("API_URL", BASE), ("USER_EMAIL", EMAIL), ("INTERNAL_UPGRADE_SECRET", SECRET),
+    ) if not value]
+    if missing:
+        print("Eksik ortam degiskenleri: " + ", ".join(missing), file=sys.stderr)
+        return 2
+    BASE = BASE.rstrip("/") + "/api/v1"
+
     code, result = req("POST", "/billing/admin/upgrade", {"email": EMAIL, "plan": PLAN})
     if code != 200:
         print("admin upgrade failed:", code, result)

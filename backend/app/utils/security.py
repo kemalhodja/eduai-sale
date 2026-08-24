@@ -10,12 +10,24 @@ from jose import JWTError, jwt
 from app.config import settings
 
 
+_BCRYPT_MAX_BYTES = 72  # bcrypt algoritma siniri; fazlasi sessizce kesilir
+
+
+def _bcrypt_input(password: str) -> bytes:
+    # Schemas 128 karaktere izin veriyor ama bcrypt yalnizca ilk 72 byte'i kullanir.
+    # Hash ve verify ayni sekilde keserek tutarli davranisi garanti eder.
+    return password.encode()[:_BCRYPT_MAX_BYTES]
+
+
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(_bcrypt_input(password), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode(), hashed.encode())
+    try:
+        return bcrypt.checkpw(_bcrypt_input(plain), hashed.encode())
+    except ValueError:
+        return False
 
 
 def create_access_token(user_id: UUID) -> str:

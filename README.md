@@ -63,48 +63,48 @@ CI: GitHub Actions `main` branch push'ta otomatik çalışır.
 
 **İlk kurulum:** [docs/SETUP_RELEASE.md](docs/SETUP_RELEASE.md) · [.github/RELEASE_SECRETS_CHECKLIST.md](.github/RELEASE_SECRETS_CHECKLIST.md)
 
-```bash
-./scripts/complete-release-setup.sh   # validate + checklist + GitHub links
-./scripts/setup-github-release.sh     # Fly bootstrap (interactive)
-```
-
 GitHub → **Actions** → **Release Production (Full Pipeline)** → `confirm`: `release`
-
-```bash
-# Yerel (token'lar export edilmişse)
-FLY_API_TOKEN=... EXPO_TOKEN=... ./scripts/release.sh --skip-verify --production --submit-play
-```
 
 | Rehber | İçerik |
 |--------|--------|
-| [docs/SETUP_RELEASE.md](docs/SETUP_RELEASE.md) | **İlk release kurulumu** (Fly + GitHub secrets) |
-| [docs/PRODUCTION.md](docs/PRODUCTION.md) | Fly setup, EAS production build |
+| [docs/SETUP_RELEASE.md](docs/SETUP_RELEASE.md) | İlk release kurulumu (secrets checklist) |
+| [docs/DEPLOY_TARGET.md](docs/DEPLOY_TARGET.md) | **Deploy hedefi: Render** (doğrulanmış tek kaynak) |
 | [docs/PLAY_STORE_LISTING.md](docs/PLAY_STORE_LISTING.md) | Mağaza metinleri + checklist |
 | [docs/PRIVACY.md](docs/PRIVACY.md) | Gizlilik politikası |
 | [docs/TERMS.md](docs/TERMS.md) | Kullanım ve abonelik şartları |
-| [docs/PRD_COMPLIANCE.md](docs/PRD_COMPLIANCE.md) | Özellik matrisi |
-| [docs/PRODUCT_BACKLOG.md](docs/PRODUCT_BACKLOG.md) | Kapalı test sonrası ürün öncelikleri |
 
-Staging API:
-
-```bash
 ## Deploy
 
 **Production API:** Render — `https://talkcash-api-prod.onrender.com`  
-Detay: [docs/DEPLOY_TARGET.md](docs/DEPLOY_TARGET.md)
+**Mekanizma:** `render.yaml` Blueprint (`autoDeploy: true`, branch: `main`) veya
+`.github/workflows/render-deploy.yml` deploy hook'u.
 
 ```bash
-./scripts/deploy-staging.sh    # Fly staging
-# Production: Render (render-deploy.yml veya Render dashboard)
-```
+# main'e merge -> Render otomatik deploy eder.
+# Manuel tetikleme:
+git push origin main            # autoDeploy
+# veya GitHub Actions -> render-deploy.yml -> Run workflow
 ```
 
-Production API:
+> Not: Fly.io referansları geçersizdir (legacy). Production yalnızca Render'dır;
+> `setup-fly-prod.sh` çalışmaz durumdadır ve dokümanlarda tutulmamalıdır.
+
+### Prod ortam değişkenleri (Render Dashboard)
+
+Zorunlular: `SECRET_KEY` (32+), `DATABASE_URL`, `REDIS_URL`, `SMTP_*`,
+`GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`. Mock flag'leri kapalı olmalı:
+`BILLING_PREMIUM_UNLOCKED=false`, `GOOGLE_PLAY_VERIFY_MOCK=false`,
+`APPLE_VERIFY_MOCK=false`. Uygulama açılışta doğrular (fail-fast).
+
+Kendi VPS'inizde Docker ile çalıştırıyorsanız:
 
 ```bash
-./scripts/setup-fly-prod.sh
-./scripts/deploy-production.sh
+POSTGRES_PASSWORD=... REDIS_PASSWORD=... MINIO_ROOT_PASSWORD=... SECRET_KEY=... \
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
+
+(Prod overlay şifreleri zorunlu kılar; DB/Redis/MinIO portları yalnızca
+127.0.0.1'e bağlanır; MinIO bucket anonim okumaya kapalıdır.)
 
 ## Native Build (Siri & Google App Actions)
 
