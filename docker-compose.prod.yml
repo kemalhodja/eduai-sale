@@ -1,4 +1,4 @@
-# Production overlay — no dev volume mounts, restart policy, hardened defaults.
+﻿# Production overlay â€” no dev volume mounts, restart policy, hardened defaults.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 #
 # GEREKLI ortam degiskenleri (yoksa compose hata verir, default sifreyle ayrilamaz):
@@ -19,6 +19,7 @@ services:
     environment:
       SCHEDULER_ENABLED: "true"
       DEBUG: "false"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://localhost}
       GOOGLE_PLAY_VERIFY_MOCK: "false"
       APPLE_VERIFY_MOCK: "false"
       BILLING_PREMIUM_UNLOCKED: "false"
@@ -31,21 +32,21 @@ services:
   db:
     restart: unless-stopped
     ports: !override
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:15432:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_gerekli}
 
   redis:
     restart: unless-stopped
     ports: !override
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:16379:6379"
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD_gerekli}"]
 
   minio:
     restart: unless-stopped
     ports: !override
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
     environment:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD_gerekli}
 
@@ -60,3 +61,4 @@ services:
       "
     environment:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD_gerekli}
+
