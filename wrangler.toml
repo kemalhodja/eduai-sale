@@ -4,3 +4,7 @@
 name = "talkcash"
 pages_build_output_dir = "mobile/dist"
 compatibility_date = "2024-09-23"
+
+# mobile/public/_worker.js bu origin'e proksiler (/__api/* -> BACKEND_ORIGIN/*)
+[vars]
+BACKEND_ORIGIN = "https://talkcash-api-prod.onrender.com"

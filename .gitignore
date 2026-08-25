@@ -28,6 +28,7 @@ DEPLOY_STATUS.json
 
 # Cloudflare API token (yerel)
 .cf-api-token
+.cf-workers-token
 .tunnel-url
 .cloudflare-tunnel.log
 .cloudflare-tunnel.pid

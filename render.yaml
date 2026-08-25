@@ -1,17 +1,21 @@
 # TalkCash API — Render Blueprint (Postgres + Redis + API)
 # Dashboard: New → Blueprint → GitHub kemalhodja/TalkCash → Apply
 # Set sync:false secrets in Render dashboard before public launch.
+#
+# NOT: free plan kullaniliyor — Postgres 30 gun sonra silinir (yedek al!),
+# web servis bosadayken uykuya dalar (ilk istek yavas gelir).
+# Uretim icin planlari starter'a yukselt.
 
 databases:
   - name: talkcash-db
-    plan: starter
+    plan: free
     region: frankfurt
     ipAllowList: []
 
 services:
   - type: keyvalue
     name: talkcash-redis
-    plan: starter
+    plan: free
     region: frankfurt
     ipAllowList: []
 
@@ -24,7 +28,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     region: frankfurt
-    plan: starter
+    plan: free
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -45,7 +49,7 @@ services:
       - key: INTERNAL_UPGRADE_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://talkcash-api-prod.onrender.com"
+        value: "https://talkcash-api-prod.onrender.com,https://talkcash.pages.dev"
       - key: SCHEDULER_ENABLED
         value: "true"
       - key: DEBUG
